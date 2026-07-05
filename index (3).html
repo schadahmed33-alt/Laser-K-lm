@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laser Dreams Cologne | 3D Ultra Luxury</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #a89968;
+            --primary-dark: #6d5d47;
+            --primary-light: #ddc9ac;
+            --bg-light: #f5ede4;
+            --bg-dark: #0a0a0a;
+            --text-dark: #1f1f1f;
+            --text-light: #5a5a5a;
+            --border: #e0d0be;
+            --white: #ffffff;
+            --success: #7a9d7a;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background: var(--bg-light);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* ============ 3D CANVAS ============ */
+        #canvas3d {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* ============ INTRO ANIMATION ============ */
+        #intro {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #faf1e5 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        #intro.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .intro-device {
+            width: 220px;
+            animation: introDeviceIn 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        #intro.hide .intro-device {
+            animation: introDeviceOut 0.8s ease both;
+        }
+
+        .intro-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            letter-spacing: 3px;
+            animation: fadeIn 1s ease 0.5s both;
+        }
+
+        .intro-sub {
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            animation: fadeIn 1s ease 0.8s both;
+        }
+
+        .laser-beam {
+            animation: beamSweep 1.6s ease-in-out 0.8s infinite;
+            transform-origin: 150px 120px;
+        }
+
+        @keyframes introDeviceIn {
+            from {
+                opacity: 0;
+                transform: translateY(80px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes introDeviceOut {
+            to {
+                opacity: 0;
+                transform: translateY(-120px) scale(0.7);
+            }
+        }
+
+        @keyframes beamSweep {
+            0%, 100% { transform: rotate(-18deg); opacity: 0.9; }
+            50% { transform: rotate(18deg); opacity: 1; }
+        }
+
+        /* ============ NAVIGATION ============ */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(245, 237, 228, 0.98);
+            backdrop-filter: blur(30px);
+            border-bottom: 1px solid rgba(168, 153, 104, 0.1);
+        }
+
+        nav.scrolled {
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
+        }
+
+        .nav-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 4rem;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 0.85rem;
+            font-weight: 600;
+            position: relative;
+            transition: color 0.3s ease;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a:hover::before {
+            width: 100%;
+        }
+
+        .nav-cta {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white !important;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(168, 153, 104, 0.2);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(168, 153, 104, 0.3);
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 6px;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* ============ HERO SECTION ============ */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #faf1e5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            margin-top: 70px;
+        }
+
+        .hero-3d-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 900px;
+            padding: 0 2rem;
+        }
+
+        .hero-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 3rem;
+            animation: slideInDown 0.8s ease 0.1s both;
+            filter: drop-shadow(0 10px 30px rgba(168, 153, 104, 0.2));
+        }
+
+        .hero-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            font-weight: 400;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            animation: slideInUp 0.8s ease 0.2s both;
+            text-shadow: 0 4px 20px rgba(168, 153, 104, 0.15);
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            margin-bottom: 3rem;
+            font-weight: 300;
+            animation: slideInUp 0.8s ease 0.3s both;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            animation: slideInUp 0.8s ease 0.4s both;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 15px 40px rgba(168, 153, 104, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 55px rgba(168, 153, 104, 0.35);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-4px);
+        }
+
+        /* ============ FEATURES SECTION ============ */
+        .features {
+            padding: 7rem 2rem;
+            background: var(--white);
+            margin-top: -1px;
+        }
+
+        .features-grid {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+        }
+
+        .feature-card {
+            padding: 3.5rem 2.5rem;
+            text-align: center;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #faf5ee 100%);
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+            animation: fadeInUp 0.8s ease;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-12px) rotateX(5deg) rotateZ(2deg);
+            border-color: var(--primary);
+            box-shadow: 0 30px 60px rgba(168, 153, 104, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* ============ RESULTS SECTION ============ */
+        .results {
+            padding: 7rem 2rem;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #faf1e5 100%);
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .results .section-header {
+            margin-bottom: 4rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 3rem;
+        }
+
+        .before-after {
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--white);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+            animation: fadeInUp 0.8s ease;
+            transition: all 0.3s ease;
+            perspective: 1000px;
+        }
+
+        .before-after:hover {
+            transform: translateY(-10px) rotateY(-2deg);
+            box-shadow: 0 30px 70px rgba(168, 153, 104, 0.15);
+        }
+
+        .before-after-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 125%;
+            overflow: hidden;
+            background: var(--text-light);
+        }
+
+        .before-after-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .before-after-label {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(26, 26, 26, 0.85);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .before-after-title {
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .before-after-title h3 {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* ============ TECHNOLOGY SECTION ============ */
+        .technology {
+            padding: 7rem 2rem;
+            background: linear-gradient(135deg, #faf1e5 0%, var(--bg-light) 100%);
+        }
+
+        .tech-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .tech-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .tech-highlight {
+            background: linear-gradient(135deg, var(--white) 0%, #fdfbf8 100%);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 3.5rem;
+            text-align: center;
+            box-shadow: 0 30px 70px rgba(168, 153, 104, 0.12);
+            transition: all 0.4s ease;
+            perspective: 1000px;
+        }
+
+        .tech-highlight:hover {
+            transform: translateY(-10px) rotateX(3deg);
+            border-color: var(--primary);
+            box-shadow: 0 40px 90px rgba(168, 153, 104, 0.2);
+        }
+
+        .tech-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 0.7rem 1.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px rgba(168, 153, 104, 0.25);
+        }
+
+        .tech-highlight h3 {
+            font-size: 2rem;
+            color: var(--text-dark);
+            margin-bottom: 0.8rem;
+            font-weight: 700;
+        }
+
+        .tech-subtitle {
+            color: var(--text-light);
+            font-size: 1.05rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .wavelengths {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .wavelength {
+            background: var(--bg-light);
+            border: 1.5px solid var(--primary);
+            color: var(--primary-dark);
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .wavelength:hover {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(168, 153, 104, 0.3);
+        }
+
+        .tech-features {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .tech-feature {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            perspective: 1000px;
+        }
+
+        .tech-feature:hover {
+            transform: translateX(10px) rotateY(-2deg);
+            border-color: var(--primary);
+            box-shadow: 0 20px 45px rgba(168, 153, 104, 0.12);
+        }
+
+        .tech-feature-icon {
+            font-size: 2.2rem;
+            flex-shrink: 0;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .tech-feature h4 {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.4rem;
+            font-weight: 700;
+        }
+
+        .tech-feature p {
+            color: var(--text-light);
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+
+        .tech-tagline {
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* ============ HOW IT WORKS ============ */
+        .howitworks {
+            padding: 7rem 2rem;
+            background: var(--white);
+        }
+
+        .how-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .how-steps {
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 3.5rem;
+            flex-wrap: wrap;
+        }
+
+        .how-step {
+            flex: 1;
+            min-width: 260px;
+            max-width: 360px;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #faf5ee 100%);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem 2.2rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.4s ease;
+            perspective: 1000px;
+        }
+
+        .how-step:hover {
+            transform: translateY(-10px) rotateX(4deg);
+            border-color: var(--primary);
+            box-shadow: 0 30px 60px rgba(168, 153, 104, 0.15);
+        }
+
+        .how-step-number {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(168, 153, 104, 0.3);
+        }
+
+        .how-step-icon {
+            font-size: 2.8rem;
+            margin-bottom: 1.2rem;
+            margin-top: 0.5rem;
+        }
+
+        .how-step h3 {
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.8rem;
+            font-weight: 700;
+        }
+
+        .how-step p {
+            color: var(--text-light);
+            font-size: 0.93rem;
+            line-height: 1.75;
+        }
+
+        .how-arrow {
+            display: flex;
+            align-items: center;
+            font-size: 2rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .how-result {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 50px;
+            padding: 1.5rem 3rem;
+            max-width: 650px;
+            margin: 0 auto;
+            box-shadow: 0 20px 50px rgba(168, 153, 104, 0.25);
+        }
+
+        .how-result-icon {
+            font-size: 1.4rem;
+        }
+
+        .how-result p {
+            font-size: 1.05rem;
+        }
+
+        /* ============ HOURS SECTION ============ */
+        .hours {
+            padding: 6rem 2rem;
+            background: var(--white);
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .hours-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hours-card {
+            background: linear-gradient(135deg, var(--bg-light) 0%, #faf5ee 100%);
+            padding: 3rem;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s ease;
+            perspective: 1000px;
+        }
+
+        .hours-card:hover {
+            box-shadow: 0 15px 40px rgba(168, 153, 104, 0.1);
+            transform: translateY(-6px) rotateX(3deg);
+            border-color: var(--primary);
+        }
+
+        .hours-card h3 {
+            color: var(--primary);
+            font-size: 1.15rem;
+            margin-bottom: 1.2rem;
+            font-weight: 700;
+        }
+
+        .hours-card p {
+            color: var(--text-dark);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .status {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            display: inline-block;
+            margin-top: 0.8rem;
+        }
+
+        .status.open {
+            background: rgba(122, 157, 122, 0.12);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status.closed {
+            background: rgba(184, 112, 112, 0.12);
+            color: #a55555;
+            border: 1px solid #a55555;
+        }
+
+        /* ============ SERVICES SECTION ============ */
+        .services {
+            padding: 7rem 2rem;
+            background: var(--white);
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 3.5rem;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+        }
+
+        .section-header p {
+            color: var(--text-light);
+            font-size: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+            letter-spacing: 0.5px;
+        }
+
+        .prices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .price-card {
+            background: linear-gradient(135deg, var(--white) 0%, #fdfbf8 100%);
+            border-radius: 18px;
+            padding: 2.8rem;
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+            animation: fadeInUp 0.8s ease;
+            perspective: 1000px;
+        }
+
+        .price-card:hover {
+            transform: translateY(-12px) rotateX(5deg) rotateZ(-1deg);
+            border-color: var(--primary);
+            box-shadow: 0 30px 65px rgba(168, 153, 104, 0.15);
+        }
+
+        .price-card h3 {
+            font-size: 1.35rem;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            padding-bottom: 1.2rem;
+            border-bottom: 2px solid var(--border);
+            font-weight: 700;
+        }
+
+        .price-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.9rem 0;
+            border-bottom: 1px solid #f5f0e8;
+            font-size: 0.95rem;
+        }
+
+        .price-item:last-child {
+            border-bottom: none;
+        }
+
+        .price-item-name {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .price-item-value {
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 1.05rem;
+        }
+
+        /* ============ BOOKING MODAL ============ */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 28px;
+            padding: 3.5rem;
+            max-width: 700px;
+            width: 90%;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.4s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .modal-header h2 {
+            font-size: 2rem;
+            color: var(--text-dark);
+            font-weight: 400;
+            letter-spacing: -0.5px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-btn:hover {
+            color: var(--primary);
+            background: var(--bg-light);
+        }
+
+        .calendar-mini {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-light);
+            border-radius: 15px;
+        }
+
+        .calendar-header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            background: var(--white);
+        }
+
+        .calendar-day:hover {
+            background: var(--primary-light);
+            color: var(--text-dark);
+        }
+
+        .calendar-day.selected {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(168, 153, 104, 0.3);
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .time-slot {
+            padding: 0.9rem;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        .time-slot:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .time-slot.selected {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.8rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.9rem;
+            color: var(--text-dark);
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 1.1rem 1.3rem;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(168, 153, 104, 0.12);
+            background: var(--white);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1.3rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            box-shadow: 0 12px 30px rgba(168, 153, 104, 0.2);
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 40px rgba(168, 153, 104, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .form-message {
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            display: none;
+            animation: slideInUp 0.3s ease;
+        }
+
+        .form-message.show {
+            display: block;
+        }
+
+        .form-message.success {
+            background: rgba(122, 157, 122, 0.12);
+            color: var(--success);
+            border: 1.5px solid var(--success);
+        }
+
+        /* ============ ABOUT SECTION ============ */
+        .about {
+            padding: 7rem 2rem;
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--white) 100%);
+        }
+
+        .about-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4.5rem;
+            align-items: center;
+        }
+
+        .about-content h2 {
+            font-size: 3rem;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+        }
+
+        .about-content p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+            line-height: 1.85;
+        }
+
+        .about-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.8rem;
+            margin-top: 2.5rem;
+        }
+
+        .about-feature {
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #fdfbf8 100%);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            perspective: 1000px;
+        }
+
+        .about-feature:hover {
+            transform: translateY(-5px) rotateX(2deg);
+            border-color: var(--primary);
+            box-shadow: 0 15px 35px rgba(168, 153, 104, 0.1);
+        }
+
+        .about-feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .about-feature-title {
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .about-feature-text {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .about-image {
+            width: 100%;
+            height: 450px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 30px 70px rgba(168, 153, 104, 0.2);
+        }
+
+        /* ============ TESTIMONIALS ============ */
+        .testimonials {
+            padding: 7rem 2rem;
+            background: var(--white);
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .testimonial-card {
+            padding: 2.5rem;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #faf5ee 100%);
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            perspective: 1000px;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-8px) rotateY(2deg);
+            box-shadow: 0 25px 50px rgba(168, 153, 104, 0.12);
+            border-color: var(--primary);
+        }
+
+        .stars {
+            color: #a89968;
+            font-size: 1.2rem;
+            margin-bottom: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        .testimonial-text {
+            color: var(--text-dark);
+            margin-bottom: 1.8rem;
+            font-style: italic;
+            line-height: 1.85;
+            font-size: 0.95rem;
+        }
+
+        .testimonial-author {
+            font-weight: 800;
+            color: var(--primary);
+            font-style: normal;
+        }
+
+        /* ============ CONTACT SECTION ============ */
+        .contact {
+            padding: 8rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .contact-content {
+            max-width: 750px;
+            margin: 0 auto;
+            color: var(--white);
+            position: relative;
+            z-index: 1;
+        }
+
+        .contact-content h2 {
+            font-size: 3.2rem;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+        }
+
+        .contact-content p {
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            opacity: 0.95;
+            line-height: 1.85;
+            font-weight: 300;
+        }
+
+        .instagram-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.2rem 2.8rem;
+            border-radius: 50px;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 2.5rem;
+            transition: all 0.3s ease;
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .instagram-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        /* ============ FOOTER ============ */
+        footer {
+            background: var(--bg-dark);
+            color: var(--white);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2.5rem;
+            padding-top: 2.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .footer-text {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        /* ============ ANIMATIONS ============ */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(20px) rotate(5deg); }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes rotate3d {
+            from {
+                transform: rotateX(0deg) rotateY(0deg);
+            }
+            to {
+                transform: rotateX(360deg) rotateY(360deg);
+            }
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                background: var(--white);
+                padding: 2rem;
+                gap: 1.5rem;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .nav-container {
+                padding: 1rem 1.5rem;
+            }
+
+            .hero {
+                margin-top: 50px;
+            }
+
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .section-header h2 {
+                font-size: 2.5rem;
+            }
+
+            .about-container {
+                grid-template-columns: 1fr;
+            }
+
+            .tech-content {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+
+            .tech-highlight {
+                padding: 2.5rem 2rem;
+            }
+
+            .tech-tagline {
+                font-size: 1.2rem;
+            }
+
+            .how-arrow {
+                display: none;
+            }
+
+            .how-result {
+                flex-direction: column;
+                text-align: center;
+                border-radius: 25px;
+                padding: 1.5rem 2rem;
+            }
+
+            .intro-device {
+                width: 160px;
+            }
+
+            .intro-text {
+                font-size: 1.4rem;
+            }
+
+            .about-image {
+                height: 300px;
+                font-size: 4rem;
+            }
+
+            .modal-content {
+                padding: 2.5rem 2rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .time-slots {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            #canvas3d {
+                opacity: 0.3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- INTRO: Lasergerät erscheint & verschwindet -->
+    <div id="intro">
+        <svg class="intro-device" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+            <!-- Laserstrahl aus dem Handstück -->
+            <g class="laser-beam">
+                <line x1="150" y1="120" x2="150" y2="10" stroke="#c9956a" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+                <line x1="150" y1="120" x2="150" y2="10" stroke="#f5e6d0" stroke-width="8" stroke-linecap="round" opacity="0.25"/>
+            </g>
+            <!-- Display -->
+            <rect x="95" y="120" width="110" height="70" rx="8" fill="#1f1f1f"/>
+            <rect x="102" y="127" width="96" height="56" rx="5" fill="#3a3a3a"/>
+            <text x="150" y="160" font-family="Sora, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ddc9ac">LD</text>
+            <!-- Displayarm -->
+            <rect x="140" y="188" width="20" height="18" fill="#a89968"/>
+            <!-- Gerätekörper -->
+            <rect x="80" y="205" width="140" height="150" rx="20" fill="#ffffff" stroke="#e0d0be" stroke-width="2"/>
+            <!-- Gold-Akzent -->
+            <path d="M80 225 Q150 265 220 225 L220 245 Q150 285 80 245 Z" fill="#a89968"/>
+            <circle cx="125" cy="218" r="6" fill="#c9956a"/>
+            <circle cx="175" cy="218" r="6" fill="#a55555"/>
+            <!-- Schlauch -->
+            <path d="M220 260 Q260 270 255 320 Q252 350 235 355" fill="none" stroke="#d9d9d9" stroke-width="10" stroke-linecap="round"/>
+            <!-- Handstück -->
+            <rect x="222" y="345" width="26" height="40" rx="8" fill="#bfbfbf"/>
+            <!-- Rollen -->
+            <circle cx="100" cy="368" r="10" fill="#8a8a8a"/>
+            <circle cx="200" cy="368" r="10" fill="#8a8a8a"/>
+        </svg>
+        <div class="intro-text">LASER DREAMS</div>
+        <div class="intro-sub">Cologne</div>
+    </div>
+
+    <!-- 3D Canvas -->
+    <div id="canvas3d"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <div class="logo">LD</div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#results">Ergebnisse</a></li>
+                <li><a href="#technology">Technologie</a></li>
+                <li><a href="#hours">Öffnungszeiten</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#" class="nav-cta" onclick="openBooking(event)">Buchen</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-logo">
+                <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                    
+                    <text x="200" y="180" font-family="Playfair Display, serif" font-size="140" font-weight="700" text-anchor="middle" fill="#1f1f1f">LD</text>
+                    <text x="200" y="240" font-family="Sora, sans-serif" font-size="20" font-weight="600" text-anchor="middle" fill="#1f1f1f" letter-spacing="3">LASERDREAMS.COLOGNE</text>
+                </svg>
+            </div>
+            <h1>Seide-Glatte Haut, <span>Für Immer</span></h1>
+            <p>Schmerzarm mit 4 Wellen ICE-Diodenlaser – Premium Laser-Haarentfernung in Köln</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn btn-primary" onclick="openBooking(event)">Termin Buchen</a>
+                <a href="#results" class="btn btn-secondary">Unsere Ergebnisse</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Moderne Technologie</h3>
+                <p>Neueste Laser-Technologie für sichere und schmerzarme Behandlung</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✨</div>
+                <h3>Beste Ergebnisse</h3>
+                <p>Sichtbare Verbesserungen schon nach der ersten Sitzung</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💎</div>
+                <h3>Premium Komfort</h3>
+                <p>Entspannung und Luxus in eleganter Umgebung</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Before & After Results -->
+    <section class="results" id="results">
+        <div class="section-header">
+            <h2>Echte Ergebnisse</h2>
+            <p>Sehen Sie die beeindruckenden Ergebnisse unserer Kundinnen</p>
+        </div>
+        <div class="results-grid">
+            <div class="before-after">
+                <div class="before-after-container">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500'%3E%3Crect fill='%23a89968' width='400' height='500'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='white' text-anchor='middle' dy='.3em'%3EBild 1%3C/text%3E%3C/svg%3E" alt="Before" class="before-after-img">
+                    <div class="before-after-label">Vorher</div>
+                </div>
+                <div class="before-after-title">
+                    <h3>Nach 1 Behandlung</h3>
+                </div>
+            </div>
+
+            <div class="before-after">
+                <div class="before-after-container">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500'%3E%3Crect fill='%23ddc9ac' width='400' height='500'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='%23666' text-anchor='middle' dy='.3em'%3EBild 2%3C/text%3E%3C/svg%3E" alt="After" class="before-after-img">
+                    <div class="before-after-label">Nachher</div>
+                </div>
+                <div class="before-after-title">
+                    <h3>Glatte Haut</h3>
+                </div>
+            </div>
+
+            <div class="before-after">
+                <div class="before-after-container">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500'%3E%3Crect fill='%236d5d47' width='400' height='500'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='white' text-anchor='middle' dy='.3em'%3EBild 3%3C/text%3E%3C/svg%3E" alt="Before" class="before-after-img">
+                    <div class="before-after-label">Vorher</div>
+                </div>
+                <div class="before-after-title">
+                    <h3>Nach 3 Behandlungen</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section class="technology" id="technology">
+        <div class="tech-container">
+            <div class="section-header">
+                <h2>Unsere Technologie</h2>
+                <p>Eines der modernsten Lasergeräte auf dem Markt</p>
+            </div>
+            <div class="tech-content">
+                <div class="tech-highlight">
+                    <div class="tech-badge">❄️ ICE-Diodenlaser</div>
+                    <h3>Diodenlaser mit 4 Wellenlängen</h3>
+                    <p class="tech-subtitle">Für alle Haut- & Haartypen</p>
+                    <div class="wavelengths">
+                        <span class="wavelength">755nm</span>
+                        <span class="wavelength">808nm</span>
+                        <span class="wavelength">940nm</span>
+                        <span class="wavelength">1064nm</span>
+                    </div>
+                </div>
+                <div class="tech-features">
+                    <div class="tech-feature">
+                        <div class="tech-feature-icon">❄️</div>
+                        <div>
+                            <h4>Kühlung bis −30°C</h4>
+                            <p>Kaum spürbar – schmerzarme Behandlung dank ICE-Technologie</p>
+                        </div>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="tech-feature-icon">⚡</div>
+                        <div>
+                            <h4>200 Millionen Schuss</h4>
+                            <p>Power pur – konstante Leistung bei jeder Behandlung</p>
+                        </div>
+                    </div>
+                    <div class="tech-feature">
+                        <div class="tech-feature-icon">✅</div>
+                        <div>
+                            <h4>Keine Pulssperre</h4>
+                            <p>Volle Flexibilität = effektive & angenehme Behandlungen</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="tech-tagline">Sag „Tschüss" zu Rasur, Waxing & Co! Moderne Technik für dein Wohlbefinden.</p>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="howitworks" id="howitworks">
+        <div class="how-container">
+            <div class="section-header">
+                <h2>Was passiert beim Lasern eigentlich?</h2>
+                <p>Dauerhaft glatte Haut – aber wie funktioniert das eigentlich?</p>
+            </div>
+            <div class="how-steps">
+                <div class="how-step">
+                    <div class="how-step-number">1</div>
+                    <div class="how-step-icon">💡</div>
+                    <h3>Gezielte Lichtimpulse</h3>
+                    <p>Der Laser sendet gezielte Lichtimpulse in die Haarwurzel – präzise und kontrolliert.</p>
+                </div>
+                <div class="how-arrow">→</div>
+                <div class="how-step">
+                    <div class="how-step-number">2</div>
+                    <div class="how-step-icon">🔥</div>
+                    <h3>Sanfte Deaktivierung</h3>
+                    <p>Die Energie wird in Wärme umgewandelt und deaktiviert die Haarwurzel sanft – ohne die Haut zu schädigen.</p>
+                </div>
+                <div class="how-arrow">→</div>
+                <div class="how-step">
+                    <div class="how-step-number">3</div>
+                    <div class="how-step-icon">❄️</div>
+                    <h3>Angenehm kühl</h3>
+                    <p>Dank der integrierten ICE-Kühlung bleibt deine Haut während der Behandlung angenehm kühl.</p>
+                </div>
+            </div>
+            <div class="how-result">
+                <span class="how-result-icon">➜</span>
+                <p><strong>Ergebnis:</strong> Weniger Haare, glatte Haut, kein Rasieren mehr!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Opening Hours -->
+    <section class="hours" id="hours">
+        <div class="section-header">
+            <h2>Öffnungszeiten</h2>
+            <p>Besuche uns zu deiner passenden Zeit</p>
+        </div>
+        <div class="hours-grid">
+            <div class="hours-card">
+                <h3>Montag - Freitag</h3>
+                <p>10:00 - 19:00 Uhr</p>
+                <div class="status open">Geöffnet</div>
+            </div>
+            <div class="hours-card">
+                <h3>Samstag</h3>
+                <p>10:00 - 17:00 Uhr</p>
+                <div class="status open">Geöffnet</div>
+            </div>
+            <div class="hours-card">
+                <h3>Sonntag</h3>
+                <p>Geschlossen</p>
+                <div class="status closed">Geschlossen</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services & Prices -->
+    <section class="services" id="services">
+        <div class="section-header">
+            <h2>Premium Services</h2>
+            <p>Exquisite Behandlungen für jeden Bedarf</p>
+        </div>
+        <div class="prices-grid">
+            <div class="price-card">
+                <h3>Gesicht</h3>
+                <div class="price-list">
+                    <div class="price-item">
+                        <span class="price-item-name">Gesicht komplett</span>
+                        <span class="price-item-value">50€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Oberlippe</span>
+                        <span class="price-item-value">10€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Kinn</span>
+                        <span class="price-item-value">20€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Wangen</span>
+                        <span class="price-item-value">15€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Hals</span>
+                        <span class="price-item-value">20€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Nacken</span>
+                        <span class="price-item-value">20€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Dekolleté</span>
+                        <span class="price-item-value">20€</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="price-card">
+                <h3>Körper Oben</h3>
+                <div class="price-list">
+                    <div class="price-item">
+                        <span class="price-item-name">Achseln</span>
+                        <span class="price-item-value">35€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Oberarme</span>
+                        <span class="price-item-value">25€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Unterarme</span>
+                        <span class="price-item-value">35€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Rücken</span>
+                        <span class="price-item-value">60€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Bauch komplett</span>
+                        <span class="price-item-value">40€</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="price-card">
+                <h3>Körper Unten</h3>
+                <div class="price-list">
+                    <div class="price-item">
+                        <span class="price-item-name">Oberschenkel</span>
+                        <span class="price-item-value">35€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Unterschenkel</span>
+                        <span class="price-item-value">45€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Po</span>
+                        <span class="price-item-value">15€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Bikini Zone</span>
+                        <span class="price-item-value">30€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Intim Bereich</span>
+                        <span class="price-item-value">45€</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="price-card">
+                <h3>Kombi-Pakete</h3>
+                <div class="price-list">
+                    <div class="price-item">
+                        <span class="price-item-name">Achseln + Beine</span>
+                        <span class="price-item-value">100€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Intim + Bikini</span>
+                        <span class="price-item-value">60€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">Körper komplett</span>
+                        <span class="price-item-value">150€</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="price-item-name">+ Mit Gesicht</span>
+                        <span class="price-item-value">175€</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="about-container">
+            <div class="about-content">
+                <h2>Warum Laser Dreams?</h2>
+                <p>Mit über 8 Jahren Erfahrung in professioneller Laser-Haarentfernung bieten wir dir Premium-Behandlungen in Köln. Unser Team kombiniert neueste Technologie mit persönlicher Beratung.</p>
+                <p>Jede Behandlung wird individuell auf deinen Haut- und Haartyp abgestimmt. Wir garantieren höchste Sicherheit, maximalen Komfort und beeindruckende Ergebnisse.</p>
+                <div class="about-features">
+                    <div class="about-feature">
+                        <div class="about-feature-icon">✓</div>
+                        <div class="about-feature-title">Zertifiziert</div>
+                        <div class="about-feature-text">Professionell geprüft</div>
+                    </div>
+                    <div class="about-feature">
+                        <div class="about-feature-icon">⚡</div>
+                        <div class="about-feature-title">Schnell</div>
+                        <div class="about-feature-text">Kurze Behandlungszeiten</div>
+                    </div>
+                    <div class="about-feature">
+                        <div class="about-feature-icon">✓</div>
+                        <div class="about-feature-title">Effektiv</div>
+                        <div class="about-feature-text">Sichtbare Ergebnisse</div>
+                    </div>
+                    <div class="about-feature">
+                        <div class="about-feature-icon">🌿</div>
+                        <div class="about-feature-title">Hautfreundlich</div>
+                        <div class="about-feature-text">Sanft & schonend</div>
+                    </div>
+                </div>
+            </div>
+            <div class="about-image">
+                <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg" style="width: 60%; height: auto;">
+                    <rect x="95" y="120" width="110" height="70" rx="8" fill="#1f1f1f"/>
+                    <rect x="102" y="127" width="96" height="56" rx="5" fill="#3a3a3a"/>
+                    <text x="150" y="160" font-family="Sora, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ddc9ac">LD</text>
+                    <rect x="140" y="188" width="20" height="18" fill="#f5ede4"/>
+                    <rect x="80" y="205" width="140" height="150" rx="20" fill="#ffffff" stroke="#e0d0be" stroke-width="2"/>
+                    <path d="M80 225 Q150 265 220 225 L220 245 Q150 285 80 245 Z" fill="#c9956a"/>
+                    <circle cx="125" cy="218" r="6" fill="#f5ede4"/>
+                    <circle cx="175" cy="218" r="6" fill="#a55555"/>
+                    <path d="M220 260 Q260 270 255 320 Q252 350 235 355" fill="none" stroke="#e8e8e8" stroke-width="10" stroke-linecap="round"/>
+                    <rect x="222" y="345" width="26" height="40" rx="8" fill="#d9d9d9"/>
+                    <circle cx="100" cy="368" r="10" fill="#f5ede4"/>
+                    <circle cx="200" cy="368" r="10" fill="#f5ede4"/>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <div class="section-header">
+            <h2>Kundinnen-Bewertungen</h2>
+            <p>Echte Erfahrungen von zufriedenen Kundinnen</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p class="testimonial-text">"Absolut professionell und in luxuriösem Ambiente! Die Ergebnisse sprechen für sich."</p>
+                <p class="testimonial-author">Sarah M.</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p class="testimonial-text">"Schon nach der ersten Sitzung beeindruckende Ergebnisse. Das Team ist super kompetent!"</p>
+                <p class="testimonial-author">Julia K.</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p class="testimonial-text">"Das beste Studio in Köln! Perfekte Balance zwischen Professionalität und Komfort."</p>
+                <p class="testimonial-author">Anna B.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="contact-content">
+            <h2>Dein Termin Wartet</h2>
+            <p>Buche jetzt online oder kontaktiere uns über Instagram. Unser Team freut sich auf dich!</p>
+            <a href="#" class="btn btn-primary" onclick="openBooking(event)">Jetzt Termin Buchen</a>
+            <br><br>
+            <a href="https://www.instagram.com/laserdreams.cologne/" target="_blank" class="instagram-link">
+                📱 @laserdreams.cologne
+            </a>
+        </div>
+    </section>
+
+    <!-- BOOKING MODAL -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Termin Buchen</h2>
+                <button class="close-btn" onclick="closeBooking()">&times;</button>
+            </div>
+
+            <form id="bookingForm" onsubmit="handleSubmit(event)">
+                <div id="formMessage"></div>
+
+                <div class="form-group">
+                    <label>Wähle dein Datum</label>
+                    <div class="calendar-mini" id="calendarMini"></div>
+                    <input type="hidden" id="selectedDate" name="selectedDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Wähle eine Uhrzeit</label>
+                    <div class="time-slots" id="timeSlots"></div>
+                    <input type="hidden" id="selectedTime" name="selectedTime" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Dein Name</label>
+                        <input type="text" id="name" name="name" placeholder="z.B. Sarah Müller" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">E-Mail</label>
+                        <input type="email" id="email" name="email" placeholder="deine@email.de" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Telefon</label>
+                    <input type="tel" id="phone" name="phone" placeholder="+49 123 456789" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="service">Service Wählen</label>
+                    <select id="service" name="service" required>
+                        <option value="">-- Service auswählen --</option>
+                        <option value="Gesicht">Gesicht (50€)</option>
+                        <option value="Körper Oben">Körper Oben</option>
+                        <option value="Körper Unten">Körper Unten</option>
+                        <option value="Intim Bereich">Intim Bereich (45€)</option>
+                        <option value="Komplettbehandlung">Komplettbehandlung (175€)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Nachricht (optional)</label>
+                    <textarea id="message" name="message" placeholder="Besondere Wünsche oder Fragen..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Anfrage Senden</button>
+                <p style="text-align: center; color: var(--text-light); margin-top: 1.5rem; font-size: 0.85rem;">
+                    Wir melden uns schnellstmöglich bei dir zur Bestätigung
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p class="footer-text">© 2024 Laser Dreams Cologne. Premium Laser-Haarentfernung.</p>
+            <div class="footer-bottom">
+                <p class="footer-text">Mo-Fr: 10-19 Uhr | Sa: 10-17 Uhr | Köln</p>
+                <p class="footer-text">@laserdreams.cologne</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // INTRO ANIMATION: Lasergerät erscheint, dann verschwindet alles
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('intro').classList.add('hide');
+            }, 2400);
+        });
+        // Fallback falls load-Event hängt
+        setTimeout(() => {
+            document.getElementById('intro').classList.add('hide');
+        }, 4000);
+
+        // 3D ANIMATION mit Three.js
+        function init3D() {
+            const container = document.getElementById('canvas3d');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            container.appendChild(renderer.domElement);
+            
+            camera.position.z = 5;
+
+            // Floating Cubes
+            const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+            const material = new THREE.MeshPhongMaterial({ 
+                color: 0xa89968,
+                emissive: 0x6d5d47,
+                shininess: 100
+            });
+
+            const cubes = [];
+            for (let i = 0; i < 5; i++) {
+                const cube = new THREE.Mesh(geometry, material.clone());
+                cube.position.x = (Math.random() - 0.5) * 10;
+                cube.position.y = (Math.random() - 0.5) * 10;
+                cube.position.z = (Math.random() - 0.5) * 10;
+                cube.rotation.x = Math.random() * Math.PI;
+                cube.rotation.y = Math.random() * Math.PI;
+                scene.add(cube);
+                cubes.push(cube);
+            }
+
+            // Lighting
+            const light = new THREE.PointLight(0xffffff, 1);
+            light.position.set(5, 5, 5);
+            scene.add(light);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+
+                cubes.forEach((cube, index) => {
+                    cube.rotation.x += 0.005;
+                    cube.rotation.y += 0.01;
+                    cube.position.y += Math.sin(Date.now() * 0.0005 + index) * 0.01;
+                });
+
+                renderer.render(scene, camera);
+            }
+
+            // Handle resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            animate();
+        }
+
+        // Initialize 3D
+        init3D();
+
+        // BOOKING FUNCTIONS
+        function generateCalendar() {
+            const container = document.getElementById('calendarMini');
+            const today = new Date();
+            const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+            
+            let html = '<div class="calendar-header">Nächste 14 Tage</div>';
+            days.forEach(day => {
+                html += `<div style="font-weight: 600; text-align: center; padding: 0.5rem; color: var(--primary);">${day}</div>`;
+            });
+
+            for (let i = 0; i < 14; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() + i);
+                const dateStr = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+                html += `<div class="calendar-day" onclick="selectDate('${dateStr}', this)">${date.getDate()}</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function generateTimeSlots() {
+            const container = document.getElementById('timeSlots');
+            const hours = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
+            let html = '';
+
+            hours.forEach(time => {
+                html += `<div class="time-slot" onclick="selectTime('${time}', this)">${time}</div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function selectDate(date, element) {
+            document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('selectedDate').value = date;
+        }
+
+        function selectTime(time, element) {
+            document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('selectedTime').value = time;
+        }
+
+        function openBooking(e) {
+            if (e) e.preventDefault();
+            document.getElementById('bookingModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            generateCalendar();
+            generateTimeSlots();
+        }
+
+        function closeBooking() {
+            document.getElementById('bookingModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('bookingModal');
+            if (event.target === modal) {
+                closeBooking();
+            }
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const formMessage = document.getElementById('formMessage');
+            const submitBtn = document.querySelector('.submit-btn');
+
+            const selectedDate = document.getElementById('selectedDate').value;
+            const selectedTime = document.getElementById('selectedTime').value;
+
+            if (!selectedDate || !selectedTime) {
+                formMessage.innerHTML = '<div class="form-message show success">Bitte wähle Datum und Uhrzeit aus!</div>';
+                return;
+            }
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const service = document.getElementById('service').value;
+            const message = document.getElementById('message').value;
+
+            // HIER DEINE E-MAIL-ADRESSE (Empfänger der Buchungen):
+            const studioEmail = 'lisatulke@gmail.com';
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Wird gesendet...';
+
+            try {
+                const response = await fetch('https://formsubmit.co/ajax/' + studioEmail, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        _subject: 'Neue Terminanfrage: ' + service + ' am ' + selectedDate + ' um ' + selectedTime,
+                        Name: name,
+                        'E-Mail': email,
+                        Telefon: phone,
+                        Service: service,
+                        Wunschtermin: selectedDate + ' um ' + selectedTime + ' Uhr',
+                        Nachricht: message || '-'
+                    })
+                });
+
+                if (response.ok) {
+                    formMessage.innerHTML = '<div class="form-message success show">✓ Anfrage erfolgreich gesendet! Wir melden uns bei dir.</div>';
+                    document.getElementById('bookingForm').reset();
+                    document.querySelectorAll('.calendar-day, .time-slot').forEach(el => el.classList.remove('selected'));
+                    setTimeout(() => { closeBooking(); }, 2500);
+                } else {
+                    throw new Error('Fehler');
+                }
+            } catch (err) {
+                formMessage.innerHTML = '<div class="form-message success show">⚠️ Senden fehlgeschlagen. Bitte kontaktiere uns über Instagram @laserdreams.cologne</div>';
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Anfrage Senden';
+        }
+
+        // NAVBAR
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // MOBILE MENU
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // SMOOTH SCROLL
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href === '#') return;
+                const target = document.querySelector(href);
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // INTERSECTION OBSERVER
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = entry.target.style.animation || 'fadeInUp 0.8s ease forwards';
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.price-card, .feature-card, .testimonial-card, .hours-card, .before-after, .about-feature').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
